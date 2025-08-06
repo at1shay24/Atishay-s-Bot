@@ -11,15 +11,19 @@ def generate_response(prompt, max_length=50):
     outputs = model.generate(
         inputs,
         attention_mask=attention_mask,
-        max_length=max_length,
+        max_length=max_length + inputs.shape[-1],  # add prompt length to max_length
         do_sample=True,
         top_p=0.9,
         temperature=0.8,
         num_return_sequences=1,
         pad_token_id=tokenizer.eos_token_id,
+        eos_token_id=tokenizer.eos_token_id,
     )
 
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+    # Remove prompt tokens from generated output
+    generated_tokens = outputs[0][inputs.shape[-1]:]
+
+    return tokenizer.decode(generated_tokens, skip_special_tokens=True)
 
 if __name__ == "__main__":
     while True:

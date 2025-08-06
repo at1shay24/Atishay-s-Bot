@@ -8,6 +8,22 @@ def load_sarcasm_data(file_path):
     lines = [line.strip() for line in lines if line.strip()]
     return lines
 
+def load_conversations(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        raw = f.read()
+
+    # Split conversations using double newline
+    convos = raw.strip().split("\n\n")
+
+    samples = []
+    for convo in convos:
+        if convo.strip():
+            lines = convo.strip().split("\n")
+            full_text = "\n".join(lines)  # Combine user + bot lines
+            samples.append(full_text)
+
+    return samples
+
 def tokenize_function(examples):
     tokenized = tokenizer(
         examples["text"],
@@ -23,7 +39,10 @@ if __name__ == "__main__":
     torch.set_num_threads(2)
 
     # Load data
-    data = load_sarcasm_data("data/sarcasm.txt")
+    one_liners = load_sarcasm_data("data/sarcasm.txt")          # Make sure this file exists
+    convos = load_conversations("data/convo_sarcasm.txt")       # Make sure this file exists too
+    data = one_liners + convos
+
     dataset = Dataset.from_dict({"text": data})
 
     # Load tokenizer and model
@@ -39,18 +58,18 @@ if __name__ == "__main__":
     training_args = TrainingArguments(
         output_dir="./results",
         overwrite_output_dir=True,
-        num_train_epochs=2,                      # Reduced to be safer
-        per_device_train_batch_size=1,           # Low batch size = less RAM & CPU usage
-        gradient_accumulation_steps=2,           # Gradually increase "effective" batch size
+        num_train_epochs=2,                      # Reduced for safety and quicker runs
+        per_device_train_batch_size=1,           # Small batch size to save memory
+        gradient_accumulation_steps=2,           # Effective batch size
         save_steps=100,
         save_total_limit=1,
         prediction_loss_only=True,
         logging_steps=10,
         logging_dir='./logs',
-        fp16=False,                              # You’re on CPU/MPS, keep it off
-        dataloader_num_workers=0,                # Keeps memory usage low
-        disable_tqdm=False,                      # Show progress
-        report_to=None,                          # Prevent any logging errors
+        fp16=False,                              # No mixed precision for CPU/MPS
+        dataloader_num_workers=0,                # Low workers to reduce RAM use
+        disable_tqdm=False,                      # Show progress bar
+        report_to=None,                          # Disable external logging
     )
 
     # Initialize Trainer
@@ -61,9 +80,9 @@ if __name__ == "__main__":
         tokenizer=tokenizer,
     )
 
-    # Train the model
+    # Start training
     trainer.train()
 
-    # Save model
+    # Save model and tokenizer
     model.save_pretrained("./results/fine_tuned_model")
     tokenizer.save_pretrained("./results/fine_tuned_model")
