@@ -2,12 +2,6 @@ import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, Trainer, TrainingArguments
 from datasets import Dataset
 
-def load_sarcasm_data(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-    lines = [line.strip() for line in lines if line.strip()]
-    return lines
-
 def load_conversations(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         raw = f.read()
@@ -16,7 +10,7 @@ def load_conversations(file_path):
     for convo in convos:
         if convo.strip():
             lines = convo.strip().split("\n")
-            full_text = "\n".join(lines)
+            full_text = "\n".join(lines)  # Combine user + bot lines as one sample
             samples.append(full_text)
     return samples
 
@@ -36,9 +30,9 @@ def tokenize_function(examples):
 if __name__ == "__main__":
     torch.set_num_threads(2)
 
-    one_liners = load_sarcasm_data("data/sarcasm.txt")
+    # ONLY load conversation data, skip one-liners
     convos = load_conversations("data/convo_sarcasm.txt")
-    data = one_liners + convos
+    data = convos
 
     dataset = Dataset.from_dict({"text": data})
 
