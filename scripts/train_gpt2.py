@@ -22,7 +22,7 @@ def tokenize_function(examples):
         examples["text"],
         padding="max_length",
         truncation=True,
-        max_length=50,
+        max_length=128,  # Increased max length for better context
     )
     tokenized["labels"] = tokenized["input_ids"].copy()
     return tokenized
@@ -30,7 +30,7 @@ def tokenize_function(examples):
 if __name__ == "__main__":
     torch.set_num_threads(2)
 
-    # ONLY load conversation data, skip one-liners
+    # Load only conversation data, no one-liners
     convos = load_conversations("data/convo_sarcasm.txt")
     data = convos
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":
         output_dir="./results",
         overwrite_output_dir=True,
         num_train_epochs=2,
-        per_device_train_batch_size=1,
+        per_device_train_batch_size=1,  # Increase if you have more GPU memory
         gradient_accumulation_steps=2,
         save_steps=100,
         save_total_limit=1,

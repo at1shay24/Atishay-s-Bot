@@ -20,8 +20,10 @@ def generate_response(prompt, model, tokenizer, max_length=300):
         attention_mask=attention_mask,
         max_length=max_length + inputs.shape[-1],
         do_sample=True,
-        top_p=0.9,
-        temperature=0.8,
+        top_p=0.95,                # a bit more diverse
+        temperature=0.7,           # less randomness, more coherent
+        no_repeat_ngram_size=3,    # prevent repeating 3-grams
+        # Removed early_stopping flag as it is deprecated/ignored
         num_return_sequences=1,
         pad_token_id=tokenizer.eos_token_id,
         eos_token_id=tokenizer.eos_token_id,
@@ -46,6 +48,10 @@ if __name__ == "__main__":
         if prompt.lower() in ["exit", "quit"]:
             print("Bot: Later, genius.")
             break
+
+        if not prompt:
+            print("Bot: Say something, please!")
+            continue
 
         if any(phrase in prompt.lower() for phrase in ["roast me", "give me a roast", "roast"]):
             if one_liners:
