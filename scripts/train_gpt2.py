@@ -22,7 +22,7 @@ def tokenize_function(examples):
         examples["text"],
         padding="max_length",
         truncation=True,
-        max_length=128,  # Increased max length for better context
+        max_length=512,  # Increased max length for better context
     )
     tokenized["labels"] = tokenized["input_ids"].copy()
     return tokenized
