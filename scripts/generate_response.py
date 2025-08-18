@@ -3,6 +3,7 @@ import random
 import os
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
+# ---------------- Load one-liners ----------------
 def load_one_liners(file_path="data/one_liners.txt"):
     if not os.path.exists(file_path):
         print(f"[WARNING] One-liners file not found at: {file_path}")
@@ -11,6 +12,7 @@ def load_one_liners(file_path="data/one_liners.txt"):
         lines = [line.strip() for line in f if line.strip()]
     return lines
 
+# ---------------- Generate response ----------------
 def generate_response(prompt, model, tokenizer, max_length=300):
     inputs = tokenizer.encode(prompt, return_tensors="pt")
     attention_mask = (inputs != tokenizer.eos_token_id).long()
@@ -23,7 +25,6 @@ def generate_response(prompt, model, tokenizer, max_length=300):
         top_p=0.95,                # a bit more diverse
         temperature=0.7,           # less randomness, more coherent
         no_repeat_ngram_size=3,    # prevent repeating 3-grams
-        # Removed early_stopping flag as it is deprecated/ignored
         num_return_sequences=1,
         pad_token_id=tokenizer.eos_token_id,
         eos_token_id=tokenizer.eos_token_id,
@@ -32,6 +33,7 @@ def generate_response(prompt, model, tokenizer, max_length=300):
     generated_tokens = outputs[0][inputs.shape[-1]:]
     return tokenizer.decode(generated_tokens, skip_special_tokens=True)
 
+# ---------------- Main ----------------
 if __name__ == "__main__":
     print("Loading model and tokenizer...")
     tokenizer = GPT2Tokenizer.from_pretrained("./results/fine_tuned_model")
@@ -50,10 +52,13 @@ if __name__ == "__main__":
             break
 
         if not prompt:
-            print("Bot: Say something, please!")
-            continue
-
-        if any(phrase in prompt.lower() for phrase in ["roast me", "give me a roast", "roast"]):
+            response = random.choice([
+                "Say something, please!",
+                "You typed nothing… impressive!",
+                "Silent treatment? Bold move.",
+                "I can’t read minds… yet.",
+            ])
+        elif any(phrase in prompt.lower() for phrase in ["roast me", "give me a roast", "roast"]):
             if one_liners:
                 response = random.choice(one_liners)
             else:
